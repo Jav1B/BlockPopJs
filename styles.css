@@ -73,10 +73,10 @@ body {
 
 .cool-button {
     font-family: 'Press Start 2P', cursive;
-    font-size: min(3vh, 20px);
-    padding: min(2vh, 15px) min(4vh, 30px);
+    font-size: min(3vh, 15px);
+    padding: 5px 10px;
     border: none;
-    border-radius: min(1.2vh, 8px);
+    border-radius: 8px;
     background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
     color: white;
     cursor: pointer;
@@ -84,13 +84,13 @@ body {
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
-    margin: min(1.5vh, 10px);
+    margin: 5px;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
     user-select: none;
-    min-width: min(30vh, 160px);
-    min-height: min(10vh, 60px);
+    width: 100px;
+    height: 40px;
 }
 
 .cool-button:hover {
@@ -148,16 +148,9 @@ body {
 }
 
 .shop-buttons {
-    position: absolute;
-    bottom: 20px;
-    left: 0;
-    right: 0;
     display: flex;
-    justify-content: center;
-    gap: 20px;
-    padding: 0 20px;
-    background: rgba(0, 0, 0, 0.8);
-    padding: 15px;
+    justify-content: space-around;
+    margin-top: 20px;
 }
 
 .shop-content::-webkit-scrollbar {

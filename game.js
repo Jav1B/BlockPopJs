@@ -86,7 +86,10 @@ class Game {
         // Initial shop setup
         this.setupShop();
         
-        requestAnimationFrame(() => this.gameLoop());
+        this.lastFrameTime = 0;
+        this.frameRate = 60; // Target frame rate
+        this.frameDuration = 1000 / this.frameRate; // Frame duration in milliseconds
+        requestAnimationFrame(this.gameLoop.bind(this));
     }
 
     getUpgradePrice(type) {
@@ -870,12 +873,17 @@ class Game {
         this.ctx.closePath();
     }
 
-    gameLoop() {
-        if (!this.isGameOver) {
-            this.update();
+    gameLoop(timestamp) {
+        if (this.lastFrameTime === 0) this.lastFrameTime = timestamp;
+        const elapsed = timestamp - this.lastFrameTime;
+
+        if (elapsed >= this.frameDuration) {
+            this.lastFrameTime = timestamp - (elapsed % this.frameDuration);
+            this.update(); // Call the update method to update game state
+            this.draw(); // Call the draw method to render the game
         }
-        this.draw();
-        requestAnimationFrame(() => this.gameLoop());
+
+        requestAnimationFrame(this.gameLoop.bind(this)); // Continue the game loop
     }
 
     setupShop() {
