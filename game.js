@@ -25,6 +25,13 @@ class Game {
         this.money = parseInt(localStorage.getItem('money')) || 0;
         this.currentTier = 1;
         
+        this.touchState = {
+            active: false,
+            targetX: 0,
+            lastX: 0,
+            speed: 15 // Pixels per frame for smooth movement
+        };
+        
         this.setupCanvas();
         this.initializeGameObjects();
         this.setupEventListeners();
@@ -42,24 +49,39 @@ class Game {
         const shopBackButton = document.getElementById('shop-back');
         const shopPlayButton = document.getElementById('shop-play');
         
-        shopButton.addEventListener('click', () => {
+        const handleShopClick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             this.showShop = true;
             document.getElementById('game-over-screen').classList.remove('active');
             document.getElementById('shop-screen').classList.add('active');
             this.updateShopDisplay();
-        });
-        
-        shopBackButton.addEventListener('click', () => {
+        };
+
+        const handleShopBackClick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             this.showShop = false;
             document.getElementById('shop-screen').classList.remove('active');
             document.getElementById('game-over-screen').classList.add('active');
-        });
-        
-        shopPlayButton.addEventListener('click', () => {
+        };
+
+        const handleShopPlayClick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             this.showShop = false;
             document.getElementById('shop-screen').classList.remove('active');
             this.startGame();
-        });
+        };
+        
+        shopButton.addEventListener('click', handleShopClick);
+        shopButton.addEventListener('touchstart', handleShopClick);
+        
+        shopBackButton.addEventListener('click', handleShopBackClick);
+        shopBackButton.addEventListener('touchstart', handleShopBackClick);
+        
+        shopPlayButton.addEventListener('click', handleShopPlayClick);
+        shopPlayButton.addEventListener('touchstart', handleShopPlayClick);
         
         // Initial shop setup
         this.setupShop();
@@ -179,22 +201,37 @@ class Game {
     }
 
     setupCanvas() {
-        this.canvas.width = 800;
-        this.canvas.height = 600;
-        this.blockHeight = 30;
+        const container = document.getElementById('game-container');
+        const containerWidth = container.clientWidth;
+        const containerHeight = container.clientHeight;
+
+        // Always use container dimensions since aspect ratio is enforced by CSS
+        this.canvas.width = containerWidth;
+        this.canvas.height = containerHeight;
+
+        // Scale all game dimensions based on canvas size
+        const scale = Math.min(containerWidth / 800, containerHeight / 600); // Use minimum scale to ensure everything fits
+        
+        // Update game dimensions
+        this.blockHeight = Math.round(30 * scale);
+        this.blockPadding = Math.round(4 * scale);
         
         // Fixed number of columns and rows
         this.cols = 8;
         this.rows = 5;
-        this.blockPadding = 4; // Padding between blocks
         
-        // Calculate actual block width including padding
-        const totalPaddingWidth = this.blockPadding * (this.cols - 1); // Total padding space
+        // Calculate block width based on scaled dimensions
+        const totalPaddingWidth = this.blockPadding * (this.cols - 1);
         const availableWidth = this.canvas.width - totalPaddingWidth;
         this.blockWidth = Math.floor(availableWidth / this.cols);
         
         // Calculate offset to center blocks
         this.blockOffsetX = Math.floor((this.canvas.width - (this.cols * this.blockWidth + totalPaddingWidth)) / 2);
+        
+        // Update paddle and ball sizes
+        this.paddleWidth = Math.round(100 * scale);
+        this.paddleHeight = Math.round(15 * scale);
+        this.ballRadius = Math.round(8 * scale);
     }
 
     initializeGameObjects() {
@@ -206,8 +243,8 @@ class Game {
         
         this.ball = {
             x: this.canvas.width / 2,
-            y: this.canvas.height - 50,
-            radius: 8,
+            y: this.canvas.height - (50 * this.canvas.height / 600),
+            radius: this.ballRadius,
             dx: 0,
             dy: 0,
             damage: baseDamage + upgradeDamage,
@@ -226,12 +263,12 @@ class Game {
 
         // Paddle properties
         this.paddle = {
-            width: 100,
-            height: 15,
-            y: this.canvas.height - 30,
+            width: this.paddleWidth,
+            height: this.paddleHeight,
+            y: this.canvas.height - (30 * this.canvas.height / 600),
             reset: () => {
                 this.paddle.x = (this.canvas.width - this.paddle.width) / 2;
-                this.paddle.y = this.canvas.height - 30;
+                this.paddle.y = this.canvas.height - (30 * this.canvas.height / 600);
             }
         };
         this.paddle.x = (this.canvas.width - this.paddle.width) / 2;
@@ -243,7 +280,7 @@ class Game {
         this.blocks = [];
         
         // Get only tier 1 blocks
-        const blockTypes = Object.entries(BLOCK_TYPES)
+        const blockTypes = Object.keys(BLOCK_TYPES)
             .filter(([_, data]) => data.tier === 1)
             .map(([type]) => type);
         
@@ -380,6 +417,7 @@ class Game {
     gameOver() {
         this.gameState = 'gameover';
         document.getElementById('game-over-screen').classList.add('active');
+        this.showShop = false;
     }
     
     setupEventListeners() {
@@ -406,7 +444,11 @@ class Game {
         const startScreen = document.getElementById('start-screen');
         const gameOverScreen = document.getElementById('game-over-screen');
 
-        const handleScreenClick = () => {
+        const handleScreenClick = (e) => {
+            // Don't handle click if it's from a button
+            if (e.target.tagName.toLowerCase() === 'button') {
+                return;
+            }
             this.handleGameAction();
         };
 
@@ -435,42 +477,51 @@ class Game {
         this.canvas.addEventListener('touchstart', handlePointerEvent);
         // Mouse and touch movement
         const handlePointerMove = (e) => {
-            const rect = this.canvas.getBoundingClientRect();
-            const pointerX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-            const x = pointerX - rect.left;
-            this.paddle.x = Math.max(0, Math.min(this.canvas.width - this.paddle.width,
-                x - this.paddle.width / 2));
+            if (!e.type.includes('touch')) {
+                // Handle mouse movement directly
+                const rect = this.canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                this.paddle.x = Math.max(0, Math.min(this.canvas.width - this.paddle.width,
+                    x - this.paddle.width / 2));
+            }
         };
 
-        this.canvas.addEventListener('mousemove', handlePointerMove);
-        this.canvas.addEventListener('touchmove', (e) => {
-            e.preventDefault(); // Prevent scrolling
-            handlePointerMove(e);
-        });
-
-        // Touch start handler for paddle movement
-        this.canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // Prevent double tap zoom
+        // Separate touch handler for smooth movement
+        const handleTouchMove = (e) => {
+            if (!this.touchState.active) return;
             const touch = e.touches[0];
             const rect = this.canvas.getBoundingClientRect();
             const touchX = touch.clientX - rect.left;
             
-            // Handle paddle movement
-            if (this.gameState === 'playing') {
-                if (touchX < rect.width / 2) {
-                    this.moveLeft = true;
-                    this.moveRight = false;
-                } else {
-                    this.moveLeft = false;
-                    this.moveRight = true;
-                }
-            }
-        });
+            this.touchState.targetX = touchX;
+            this.touchState.lastX = touchX;
+        };
 
-        this.canvas.addEventListener('touchend', () => {
-            this.moveLeft = false;
-            this.moveRight = false;
-        });
+        const handleTouchStart = (e) => {
+            const touch = e.touches[0];
+            const rect = this.canvas.getBoundingClientRect();
+            const touchX = touch.clientX - rect.left;
+            
+            this.touchState.active = true;
+            this.touchState.targetX = touchX;
+            this.touchState.lastX = touchX;
+            
+            // Only handle ball launch if in playing state
+            if (this.gameState === 'playing' && this.ball.attached) {
+                this.ball.attached = false;
+                this.ball.dy = -5;
+            }
+        };
+
+        const handleTouchEnd = () => {
+            this.touchState.active = false;
+        };
+
+        this.canvas.addEventListener('mousemove', handlePointerMove);
+        this.canvas.addEventListener('touchmove', handleTouchMove);
+        this.canvas.addEventListener('touchstart', handleTouchStart);
+        this.canvas.addEventListener('touchend', handleTouchEnd);
+        this.canvas.addEventListener('touchcancel', handleTouchEnd);
     }
 
     updateMoney(amount) {
@@ -547,122 +598,87 @@ class Game {
             return block.y < this.canvas.height + block.height;
         });
     }
-    
-    startGame() {
-        this.gameState = 'playing';
-        document.getElementById('start-screen').classList.remove('active');
-        this.resetGame();
-    }
-    
-    gameOver() {
-        this.gameState = 'gameover';
-        document.getElementById('game-over-screen').classList.add('active');
-        // Reset shop state when game over
-        this.showShop = false;
-    }
-    
-    setupShop() {
-        const upgradesList = document.querySelector('.upgrades-list');
-        upgradesList.innerHTML = '';
-        
-        Object.entries(UPGRADE_TYPES).forEach(([type, data]) => {
-            const button = document.createElement('button');
-            button.className = 'cool-button upgrade-button';
-            const price = this.getUpgradePrice(type);
-            const priceText = price === Infinity ? 'MAX' : `💰 ${price}`;
-            
-            button.innerHTML = `
-                <div class="upgrade-info">
-                    <div>${data.name}</div>
-                    <div class="upgrade-level">Level ${this.upgrades[type]}/${data.maxLevel}</div>
-                </div>
-                <div class="upgrade-price">${priceText}</div>
-            `;
-            
-            button.addEventListener('click', () => {
-                if (this.money >= price && price !== Infinity) {
-                    this.buyUpgrade(type);
-                    this.updateShopDisplay();
-                } else {
-                    button.classList.add('shake');
-                    setTimeout(() => button.classList.remove('shake'), 500);
-                }
-            });
-            
-            upgradesList.appendChild(button);
-        });
-    }
-    
-    updateShopDisplay() {
-        document.getElementById('shop-money-amount').textContent = this.money;
-        this.setupShop(); // Refresh all upgrade buttons
-    }
-    
+
     update() {
-        // Always update particles for visual effects
-        if (this.particles.length > 0) {
-            const now = Date.now();
-            this.particles = this.particles.filter(particle => {
-                // Remove particles older than 3 seconds
-                if (now - particle.creationTime >= 3000) return false;
-                return particle.update();
-            });
-        }
-        
-        if (this.gameState === 'start' || this.gameState === 'gameover') {
-            this.updateDecorativeBlocks();
+        if (this.gameState !== 'playing') {
+            // Always update particles for visual effects
+            if (this.particles.length > 0) {
+                const now = Date.now();
+                this.particles = this.particles.filter(particle => {
+                    // Remove particles older than 3 seconds
+                    if (now - particle.creationTime >= 3000) return false;
+                    return particle.update();
+                });
+            }
+            
+            if (this.gameState === 'start' || this.gameState === 'gameover') {
+                this.updateDecorativeBlocks();
+            }
             return;
         }
         
-        // Update paddle position for keyboard/touch controls
-        const paddleSpeed = 10;
-        if (this.moveLeft || this.keyState.left) {
-            this.paddle.x = Math.max(0, this.paddle.x - paddleSpeed);
-        }
-        if (this.moveRight || this.keyState.right) {
-            this.paddle.x = Math.min(this.canvas.width - this.paddle.width, this.paddle.x + paddleSpeed);
-        }
-        
-        // Keep ball attached to paddle if not launched
-        if (this.ball.attached) {
-            this.ball.x = this.paddle.x + this.paddle.width/2;
-            this.ball.y = this.paddle.y - this.ball.radius;
-            return;
+        // Handle touch movement
+        if (this.touchState.active) {
+            const dx = this.touchState.targetX - this.paddle.x - this.paddle.width/2;
+            if (Math.abs(dx) > 1) {
+                const moveAmount = Math.sign(dx) * Math.min(Math.abs(dx), this.touchState.speed);
+                this.paddle.x = Math.max(0, Math.min(this.canvas.width - this.paddle.width,
+                    this.paddle.x + moveAmount));
+            }
         }
 
-        // Ball movement
-        this.ball.x += this.ball.dx;
-        this.ball.y += this.ball.dy;
-        
-        // Enforce minimum ball speed
-        const currentSpeed = Math.sqrt(this.ball.dx * this.ball.dx + this.ball.dy * this.ball.dy);
-        if (currentSpeed < this.minBallSpeed) {
-            const speedRatio = this.minBallSpeed / currentSpeed;
-            this.ball.dx *= speedRatio;
-            this.ball.dy *= speedRatio;
+        // Update paddle position based on keyboard input
+        if (this.keyState.left) {
+            this.paddle.x = Math.max(0, this.paddle.x - 7);
+        }
+        if (this.keyState.right) {
+            this.paddle.x = Math.min(this.canvas.width - this.paddle.width, this.paddle.x + 7);
+        }
+
+        // Update ball position if not attached to paddle
+        if (!this.ball.attached) {
+            this.ball.x += this.ball.dx;
+            this.ball.y += this.ball.dy;
+        } else {
+            this.ball.x = this.paddle.x + this.paddle.width/2;
+            this.ball.y = this.paddle.y - this.ball.radius;
         }
 
         // Ball collision with walls
-        if (this.ball.x + this.ball.radius > this.canvas.width || this.ball.x - this.ball.radius < 0) {
+        if (this.ball.x - this.ball.radius < 0 || 
+            this.ball.x + this.ball.radius > this.canvas.width) {
             this.ball.dx = -this.ball.dx;
+            this.ball.x = Math.max(this.ball.radius, 
+                Math.min(this.canvas.width - this.ball.radius, this.ball.x));
         }
         if (this.ball.y - this.ball.radius < 0) {
             this.ball.dy = -this.ball.dy;
-        }
-        
-        // Ball collision with paddle
-        if (this.ball.y + this.ball.radius > this.paddle.y &&
-            this.ball.x > this.paddle.x &&
-            this.ball.x < this.paddle.x + this.paddle.width) {
-            this.ball.dy = -Math.abs(this.ball.dy);
-            
-            // Add angle based on where the ball hits the paddle
-            const hitPosition = (this.ball.x - this.paddle.x) / this.paddle.width;
-            this.ball.dx = 8 * (hitPosition - 0.5);
+            this.ball.y = this.ball.radius;
         }
 
-        // Ball collision with blocks
-        let collidedBlocks = [];
+        // Ball collision with paddle
+        if (this.ball.y + this.ball.radius > this.paddle.y &&
+            this.ball.y - this.ball.radius < this.paddle.y + this.paddle.height &&
+            this.ball.x + this.ball.radius > this.paddle.x &&
+            this.ball.x - this.ball.radius < this.paddle.x + this.paddle.width) {
+            
+            // Calculate where on the paddle the ball hit (0 to 1)
+            const hitPos = (this.ball.x - this.paddle.x) / this.paddle.width;
+            
+            // Calculate angle (-60 to 60 degrees)
+            const angle = (hitPos - 0.5) * Math.PI * 2/3;
+            
+            // Set new velocity based on angle while maintaining speed
+            const speed = Math.sqrt(this.ball.dx * this.ball.dx + this.ball.dy * this.ball.dy);
+            this.ball.dx = Math.sin(angle) * speed;
+            this.ball.dy = -Math.cos(angle) * speed;
+            
+            // Ensure ball is above paddle
+            this.ball.y = this.paddle.y - this.ball.radius;
+        }
+
+        // Find blocks that might be colliding
+        const collidedBlocks = [];
         
         // Find all blocks that the ball might be colliding with
         for (let i = this.blocks.length - 1; i >= 0; i--) {
@@ -722,12 +738,22 @@ class Game {
                 this.ball.y += (dy > 0 ? overlapY : -overlapY);
             }
 
+            // Handle block destruction
             if (block.hit(this.ball.damage)) {
-                this.updateMoney(block.getReward());
+                // Store block info before removing it
+                const blockX = block.x;
+                const blockY = block.y;
+                const blockType = block.type;
+                const blockReward = block.getReward();
+                const blockMaxHp = block.maxHp;
                 
-                // Create explosion effect
-                this.createExplosion(block.x + block.width/2, block.y + block.height/2, 
-                                    BLOCK_TYPES[block.type].color, block.maxHp);
+                // Remove the block first
+                this.blocks.splice(index, 1);
+                
+                // Update money and create explosion
+                this.updateMoney(blockReward);
+                this.createExplosion(blockX + block.width/2, blockY + block.height/2, 
+                                   BLOCK_TYPES[blockType].color, blockMaxHp);
                 
                 // Store current ball direction
                 const currentSpeed = Math.sqrt(this.ball.dx * this.ball.dx + this.ball.dy * this.ball.dy);
@@ -742,7 +768,7 @@ class Game {
                 this.ball.dy = directionY * this.currentSpeed;
                 
                 // Get current block's tier
-                const currentTier = BLOCK_TYPES[block.type].tier;
+                const currentTier = BLOCK_TYPES[blockType].tier;
                 
                 // Always try to get next tier blocks
                 const nextTierTypes = Object.keys(BLOCK_TYPES).filter(
@@ -752,16 +778,17 @@ class Game {
                 // If next tier exists, use it, otherwise stay at current tier
                 const type = nextTierTypes.length > 0 ?
                     nextTierTypes[Math.floor(Math.random() * nextTierTypes.length)] :
-                    block.type;
+                    blockType;
                 
+                // Add the new block to the array
                 const newBlock = new Block(
                     type,
-                    block.x,
-                    block.y,
+                    blockX,
+                    blockY,
                     this.blockWidth,
                     this.blockHeight
                 );
-                this.blocks[index] = newBlock;
+                this.blocks.push(newBlock);
             }
         }
 
@@ -775,6 +802,15 @@ class Game {
         // Create new blocks if all are destroyed
         if (this.blocks.length === 0) {
             this.createBlocks();
+        }
+        
+        // Update particles
+        if (this.particles.length > 0) {
+            const now = Date.now();
+            this.particles = this.particles.filter(particle => {
+                if (now - particle.creationTime >= 3000) return false;
+                return particle.update();
+            });
         }
     }
 
@@ -793,8 +829,6 @@ class Game {
             this.ctx.fillText(clowns, this.canvas.width/2, this.canvas.height/2);
             return;
         }
-
-
 
         if (this.isGameOver) {
             // Draw game over screen
@@ -842,6 +876,43 @@ class Game {
         }
         this.draw();
         requestAnimationFrame(() => this.gameLoop());
+    }
+
+    setupShop() {
+        const upgradesList = document.querySelector('.upgrades-list');
+        upgradesList.innerHTML = '';
+        
+        Object.entries(UPGRADE_TYPES).forEach(([type, data]) => {
+            const button = document.createElement('button');
+            button.className = 'cool-button upgrade-button';
+            const price = this.getUpgradePrice(type);
+            const priceText = price === Infinity ? 'MAX' : `💰 ${price}`;
+            
+            button.innerHTML = `
+                <div class="upgrade-info">
+                    <div>${data.name}</div>
+                    <div class="upgrade-level">Level ${this.upgrades[type]}/${data.maxLevel}</div>
+                </div>
+                <div class="upgrade-price">${priceText}</div>
+            `;
+            
+            button.addEventListener('click', () => {
+                if (this.money >= price && price !== Infinity) {
+                    this.buyUpgrade(type);
+                    this.updateShopDisplay();
+                } else {
+                    button.classList.add('shake');
+                    setTimeout(() => button.classList.remove('shake'), 500);
+                }
+            });
+            
+            upgradesList.appendChild(button);
+        });
+    }
+    
+    updateShopDisplay() {
+        document.getElementById('shop-money-amount').textContent = this.money;
+        this.setupShop(); // Refresh all upgrade buttons
     }
 }
 
