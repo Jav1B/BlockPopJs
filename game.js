@@ -620,12 +620,11 @@ class Game {
         
         // Handle touch movement
         if (this.touchState.active) {
-            const dx = this.touchState.targetX - this.paddle.x - this.paddle.width / 2;
-            if (Math.abs(dx) > 1) {
-                const moveAmount = Math.sign(dx) * Math.min(Math.abs(dx), this.touchState.speed * deltaTime * 50); 
-                this.paddle.x = Math.max(0, Math.min(this.canvas.width - this.paddle.width,
-                    this.paddle.x + moveAmount));
-            }
+            const targetX = this.touchState.targetX - this.paddle.width / 2;
+            const dx = targetX - this.paddle.x;
+            const moveAmount = Math.sign(dx) * Math.min(Math.abs(dx), this.touchState.speed * deltaTime * 50); // Adjust movement incrementally
+            this.paddle.x = Math.max(0, Math.min(this.canvas.width - this.paddle.width,
+                this.paddle.x + moveAmount));
         }
 
         // Update paddle position based on keyboard input
