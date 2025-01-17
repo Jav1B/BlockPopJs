@@ -3,11 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Block Breaker RPG</title>
+    <title>Blocky</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div id="game-container">
+        <div id="start-screen" class="screen">
+            <h1>BLOCKY</h1>
+            <p>Click or tap to Start</p>
+        </div>
+        <div id="game-over-screen" class="screen">
+            <h2>GAME OVER</h2>
+            <div class="game-over-buttons">
+                <button id="shop-button" class="cool-button">🛍️ SHOP</button>
+                <p>Click or tap to restart</p>
+            </div>
+        </div>
+        <div id="shop-screen" class="screen">
+            <h2 class="shop-title">SHOP</h2>
+            <div class="shop-content">
+                <div class="money-display">Money: 💰 <span id="shop-money-amount">0</span></div>
+                <div class="upgrades-list">
+                    <!-- Upgrade buttons will be added dynamically -->
+                </div>
+            </div>
+            <div class="shop-buttons">
+                <button id="shop-back" class="cool-button">🔙 BACK</button>
+                <button id="shop-play" class="cool-button">▶️ NEW GAME</button>
+            </div>
+        </div>
         <div id="hud">
             <div id="money">💰 <span id="money-amount">0</span></div>
         </div>

@@ -1,4 +1,4 @@
-const UPGRADE_TYPES = {
+const UPGRADE_TYPES = window.UPGRADE_TYPES = {
     PADDLE_WIDTH: {
         name: 'Wider Paddle',
         basePrice: 1000,
@@ -37,7 +37,7 @@ const UPGRADE_TYPES = {
     }
 };
 
-const BLOCK_TYPES = {
+const BLOCK_TYPES = window.BLOCK_TYPES = {
     DIRT: {
         name: 'Dirt',
         color: '#8B4513',
@@ -100,135 +100,49 @@ class Particle {
     constructor(x, y, color, size, speed = 1, type = 'normal') {
         this.x = x;
         this.y = y;
-        this.originalColor = color;
+        this.color = color;
         this.size = size;
         this.type = type;
+        this.creationTime = Date.now();
         
-        // Random angle with more upward tendency for some particles
-        this.angle = Math.random() * Math.PI * 2;
+        // Random angle for movement
+        const angle = Math.random() * Math.PI * 2;
+        this.dx = Math.cos(angle) * speed;
+        this.dy = Math.sin(angle) * speed;
+        
+        // Adjust vertical velocity for upward particles
         if (type === 'upward') {
-            this.angle = Math.PI + Math.random() * Math.PI - Math.PI/3;
+            this.dy -= speed * 1.5;
         }
         
-        // Varying speeds based on particle type
-        this.speed = (Math.random() * 8 + 8) * speed;
-        if (type === 'spark') {
-            this.speed *= 1.5;
-        }
-        
-        this.dx = Math.cos(this.angle) * this.speed;
-        this.dy = Math.sin(this.angle) * this.speed;
-        
-        // Longer life and slower decay
-        this.life = 1;
-        this.decay = Math.random() * 0.01 + 0.005;
-        
-        // Different physics for different particle types
-        this.gravity = type === 'heavy' ? 0.3 : 0.05;
-        this.bounce = 0.6;
-        
-        // Rotation for more dynamic movement
-        this.rotation = Math.random() * Math.PI * 2;
-        this.rotationSpeed = (Math.random() - 0.5) * 0.2;
-        
-        // Flashing effect
-        this.flash = Math.random() > 0.7;
-        this.flashSpeed = Math.random() * 0.1 + 0.05;
-        this.flashPhase = Math.random() * Math.PI * 2;
+        // Shorter lifespan for better performance
+        this.life = 40 + Math.random() * 20;
     }
-
+    
     update() {
-        // Update position
+        // Age-based removal
+        if (Date.now() - this.creationTime >= 3000) return false;
+        
         this.x += this.dx;
         this.y += this.dy;
         
-        // Apply physics based on type
-        if (this.type !== 'spark') {
-            this.dy += this.gravity;
-            this.dx *= 0.98;
-            this.dy *= 0.98;
-        } else {
-            this.dx *= 0.95; // Sparks slow down faster
-            this.dy *= 0.95;
+        // Simplified physics
+        if (this.type !== 'upward') {
+            this.dy += 0.1;
         }
         
-        // Bounce off bottom of screen
-        if (this.y > 600 - this.size) { // Assuming canvas height is 600
-            this.y = 600 - this.size;
-            this.dy = -this.dy * this.bounce;
-            this.dx *= 0.8;
-        }
-        
-        // Update rotation
-        this.rotation += this.rotationSpeed;
-        
-        // Update flash phase
-        this.flashPhase += this.flashSpeed;
-        
-        // Slower decay at the end of life
-        if (this.life < 0.3) {
-            this.decay *= 0.95;
-        }
-        
-        this.life -= this.decay;
+        this.life--;
         return this.life > 0;
     }
-
+    
     draw(ctx) {
-        // Calculate flash effect
-        let flashIntensity = this.flash ? Math.sin(this.flashPhase) * 0.3 + 0.7 : 1;
-        
-        // Set color based on type and flash
-        if (this.type === 'spark') {
-            this.color = `hsl(${Math.sin(this.flashPhase * 2) * 60 + 30}, 100%, ${flashIntensity * 100}%)`;
-        } else {
-            this.color = this.flash ? '#FFF' : this.originalColor;
-        }
-        
-        ctx.save();
-        ctx.globalAlpha = this.life * flashIntensity;
-        
-        // Enhanced glow effect
-        ctx.shadowBlur = 20;
-        ctx.shadowColor = this.color;
-        
-        // Draw main particle
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.rotation);
-        
-        if (this.type === 'spark') {
-            // Draw star shape for sparks
-            ctx.fillStyle = this.color;
-            ctx.beginPath();
-            for (let i = 0; i < 5; i++) {
-                const angle = (i * Math.PI * 2) / 5;
-                const x = Math.cos(angle) * this.size;
-                const y = Math.sin(angle) * this.size;
-                i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-            }
-            ctx.closePath();
-            ctx.fill();
-        } else {
-            // Draw glowing circle with additional inner glow
-            const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.size);
-            gradient.addColorStop(0, '#FFF');
-            gradient.addColorStop(0.4, this.color);
-            gradient.addColorStop(1, 'rgba(0,0,0,0)');
-            
-            ctx.fillStyle = gradient;
-            ctx.beginPath();
-            ctx.arc(0, 0, this.size, 0, Math.PI * 2);
-            ctx.fill();
-        }
-        
-        // Additional glow layer
-        ctx.globalAlpha *= 0.5;
-        ctx.shadowBlur = 30;
+        const alpha = Math.min(1, this.life / 20);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = this.color;
         ctx.beginPath();
-        ctx.arc(0, 0, this.size * 0.7, 0, Math.PI * 2);
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fill();
-        
-        ctx.restore();
+        ctx.globalAlpha = 1;
     }
 }
 
