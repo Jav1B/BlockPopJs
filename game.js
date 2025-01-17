@@ -637,8 +637,8 @@ class Game {
 
         // Update ball position if not attached to paddle
         if (!this.ball.attached) {
-            this.ball.x += this.ball.dx * deltaTime * 50; // Adjust ball position based on delta time
-            this.ball.y += this.ball.dy * deltaTime * 50; // Adjust ball position based on delta time
+            this.ball.x += this.ball.dx * deltaTime * 30; // Adjust ball position based on delta time
+            this.ball.y += this.ball.dy * deltaTime * 30; // Adjust ball position based on delta time
         } else {
             this.ball.x = this.paddle.x + this.paddle.width/2;
             this.ball.y = this.paddle.y - this.ball.radius;
