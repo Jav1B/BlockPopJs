@@ -87,8 +87,6 @@ class Game {
         this.setupShop();
         
         this.lastFrameTime = 0;
-        this.frameRate = 60; // Target frame rate
-        this.frameDuration = 1000 / this.frameRate; // Frame duration in milliseconds
         requestAnimationFrame(this.gameLoop.bind(this));
     }
 
@@ -602,7 +600,7 @@ class Game {
         });
     }
 
-    update() {
+    update(deltaTime) {
         if (this.gameState !== 'playing') {
             // Always update particles for visual effects
             if (this.particles.length > 0) {
@@ -622,9 +620,9 @@ class Game {
         
         // Handle touch movement
         if (this.touchState.active) {
-            const dx = this.touchState.targetX - this.paddle.x - this.paddle.width/2;
+            const dx = this.touchState.targetX - this.paddle.x - this.paddle.width / 2;
             if (Math.abs(dx) > 1) {
-                const moveAmount = Math.sign(dx) * Math.min(Math.abs(dx), this.touchState.speed);
+                const moveAmount = Math.sign(dx) * Math.min(Math.abs(dx), this.touchState.speed * deltaTime * 50); 
                 this.paddle.x = Math.max(0, Math.min(this.canvas.width - this.paddle.width,
                     this.paddle.x + moveAmount));
             }
@@ -632,16 +630,16 @@ class Game {
 
         // Update paddle position based on keyboard input
         if (this.keyState.left) {
-            this.paddle.x = Math.max(0, this.paddle.x - 7);
+            this.paddle.x = Math.max(0, this.paddle.x - 7 * deltaTime);
         }
         if (this.keyState.right) {
-            this.paddle.x = Math.min(this.canvas.width - this.paddle.width, this.paddle.x + 7);
+            this.paddle.x = Math.min(this.canvas.width - this.paddle.width, this.paddle.x + 7 * deltaTime);
         }
 
         // Update ball position if not attached to paddle
         if (!this.ball.attached) {
-            this.ball.x += this.ball.dx;
-            this.ball.y += this.ball.dy;
+            this.ball.x += this.ball.dx * deltaTime * 50; // Adjust ball position based on delta time
+            this.ball.y += this.ball.dy * deltaTime * 50; // Adjust ball position based on delta time
         } else {
             this.ball.x = this.paddle.x + this.paddle.width/2;
             this.ball.y = this.paddle.y - this.ball.radius;
@@ -877,12 +875,14 @@ class Game {
         if (this.lastFrameTime === 0) this.lastFrameTime = timestamp;
         const elapsed = timestamp - this.lastFrameTime;
 
-        if (elapsed >= this.frameDuration) {
-            this.lastFrameTime = timestamp - (elapsed % this.frameDuration);
-            this.update(); // Call the update method to update game state
-            this.draw(); // Call the draw method to render the game
-        }
+        // Calculate delta time in seconds
+        const deltaTime = elapsed / 1000; // Convert milliseconds to seconds
 
+        // Update game logic using delta time
+        this.update(deltaTime);
+        this.draw(); // Call the draw method to render the game
+
+        this.lastFrameTime = timestamp;
         requestAnimationFrame(this.gameLoop.bind(this)); // Continue the game loop
     }
 
