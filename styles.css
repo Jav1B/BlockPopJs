@@ -1,0 +1,43 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #1a1a1a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    touch-action: none;
+    user-select: none;
+}
+
+#game-container {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+}
+
+#hud {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    color: white;
+    font-family: Arial, sans-serif;
+    font-size: 20px;
+    z-index: 1;
+}
+
+#money, #current-tier {
+    margin: 5px;
+    text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);
+}
+
+#gameCanvas {
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+    touch-action: none;
+}
