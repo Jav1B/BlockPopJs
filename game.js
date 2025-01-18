@@ -88,8 +88,6 @@ class Game {
         
         this.lastFrameTime = 0;
         requestAnimationFrame(this.gameLoop.bind(this));
-        
-        this.createBackgroundBlocks();
     }
 
     getUpgradePrice(type) {
@@ -351,9 +349,9 @@ class Game {
 
         // Only handle game controls if we're in playing state
         if (this.gameState === 'playing') {
-            if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
+            if (e.key === 'ArrowLeft' || e.key === 'a') {
                 this.keyState.left = isKeyDown;
-            } else if (e.code === 'ArrowRight' || e.code === 'KeyD') {
+            } else if (e.key === 'ArrowRight' || e.key === 'd') {
                 this.keyState.right = isKeyDown;
             } else if (isKeyDown && (e.code === 'Space' || e.code === 'Enter')) {
                 // Launch ball on spacebar or enter
@@ -924,26 +922,6 @@ class Game {
     updateShopDisplay() {
         document.getElementById('shop-money-amount').textContent = this.money;
         this.setupShop(); // Refresh all upgrade buttons
-    }
-
-    createBackgroundBlocks() {
-        const createBlock = () => {
-            // Create a block at a random position
-            const block = { x: Math.random() * this.canvas.width, y: Math.random() * this.canvas.height, width: 50, height: 20 };
-            this.decorativeBlocks.push(block);
-
-            // Set a random timer to destroy the block
-            const destroyTime = Math.random() * (1000 - 200) + 200; // Between 200ms and 1000ms
-            setTimeout(() => {
-                this.decorativeBlocks = this.decorativeBlocks.filter(b => b !== block);
-                this.createExplosion(block.x + block.width / 2, block.y + block.height / 2, '#FF0000', 100);
-            }, destroyTime);
-        };
-
-        // Create multiple blocks initially
-        for (let i = 0; i < 10; i++) {
-            createBlock();
-        }
     }
 }
 
