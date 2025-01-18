@@ -518,7 +518,7 @@ class Game {
             this.touchState.active = false;
         };
 
-        this.canvas.addEventListener('mousemove', handlePointerMove);
+        /*this.canvas.addEventListener('mousemove', handlePointerMove);*/
         this.canvas.addEventListener('touchmove', handleTouchMove);
         this.canvas.addEventListener('touchstart', handleTouchStart);
         this.canvas.addEventListener('touchend', handleTouchEnd);
