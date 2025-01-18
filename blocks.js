@@ -43,6 +43,14 @@ const UPGRADE_TYPES = window.UPGRADE_TYPES = {
         maxLevel: 99,
         description: 'Automatically moves paddle towards ball'
     },
+    SPEED_INTERVAL: {
+        name: 'Speed Control',
+        basePrice: 750,
+        priceIncrease: 500,
+        effect: 0.5, // Additional seconds between speed increases per level
+        maxLevel: 99,
+        description: 'Increases time between ball speed-ups'
+    },
 };
 
 const BLOCK_TYPES = window.BLOCK_TYPES = {

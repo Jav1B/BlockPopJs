@@ -5,6 +5,8 @@ class Game {
         this.baseSpeed = 2;
         this.speedIncrease = 0.1;
         this.currentSpeed = this.baseSpeed;
+        this.lastSpeedIncreaseTime = Date.now();
+        this.speedNotificationTimer = 0;
         this.particles = [];
         this.decorativeBlocks = [];
         this.keyState = {
@@ -218,13 +220,13 @@ class Game {
         const container = document.getElementById('game-container');
         const containerWidth = container.clientWidth;
         const containerHeight = container.clientHeight;
-
+    
         // Always use container dimensions since aspect ratio is enforced by CSS
         this.canvas.width = containerWidth;
         this.canvas.height = containerHeight;
-
+    
         // Scale all game dimensions based on canvas size
-        const scale = Math.min(containerWidth / 800, containerHeight / 600); // Use minimum scale to ensure everything fits
+        const scale = Math.min(containerWidth / 800, containerHeight / 600);
         
         // Update game dimensions
         this.blockHeight = Math.round(30 * scale);
@@ -239,13 +241,46 @@ class Game {
         const availableWidth = this.canvas.width - totalPaddingWidth;
         this.blockWidth = Math.floor(availableWidth / this.cols);
         
-        // Calculate offset to center blocks
+        // Calculate offset to center blocks horizontally
         this.blockOffsetX = Math.floor((this.canvas.width - (this.cols * this.blockWidth + totalPaddingWidth)) / 2);
+        
+        // Increase top margin for UI elements and notifications
+        this.topMargin = Math.round(100 * scale); // Increased from 80 to 100
         
         // Update paddle and ball sizes
         this.paddleWidth = Math.round(100 * scale);
         this.paddleHeight = Math.round(15 * scale);
         this.ballRadius = Math.round(8 * scale);
+    }
+    
+    createBlocks() {
+        this.blocks = [];
+        
+        // Get only tier 1 blocks
+        const blockTypes = Object.keys(BLOCK_TYPES)
+            .filter(type => BLOCK_TYPES[type].tier === 1);
+        
+        // If no tier 1 blocks found, use 'DIRT' as fallback
+        if (blockTypes.length === 0) {
+            blockTypes.push('DIRT');
+        }
+        
+        // Create blocks in a grid with padding between them
+        for (let row = 0; row < this.rows; row++) {
+            for (let col = 0; col < this.cols; col++) {
+                const type = blockTypes[0];
+                const x = this.blockOffsetX + col * (this.blockWidth + this.blockPadding);
+                const y = this.topMargin + row * (this.blockHeight + this.blockPadding);
+                
+                this.blocks.push(new Block(
+                    type,
+                    x,
+                    y,
+                    this.blockWidth,
+                    this.blockHeight
+                ));
+            }
+        }
     }
 
     initializeGameObjects() {
@@ -324,6 +359,8 @@ class Game {
     resetGame() {
         this.isGameOver = false;
         this.currentSpeed = this.baseSpeed;
+        this.lastSpeedIncreaseTime = Date.now();
+        this.speedNotificationTimer = 0;
         this.currentTier = 1; // Reset to tier 1
         this.secretCode = ''; // Reset secret code
         
@@ -436,6 +473,8 @@ class Game {
         this.paddle.reset();
         this.gameState = 'playing';
         this.currentSpeed = this.baseSpeed;
+        this.lastSpeedIncreaseTime = Date.now();
+        this.speedNotificationTimer = 0;
         document.getElementById('game-over-screen').classList.remove('active');
     }
     
@@ -596,7 +635,6 @@ class Game {
     updateMoney(amount) {
         this.money += amount;
         localStorage.setItem('money', this.money.toString());
-        document.getElementById('money-amount').textContent = this.money;
         
         // Update tier based on money thresholds
         const tierThresholds = [
@@ -685,6 +723,38 @@ class Game {
             }
             return;
         }        
+
+        // Handle speed increases
+        if (!this.ball.attached) {
+            const baseInterval = 5000; // 1 second base interval
+            const upgradeEffect = (this.upgrades.SPEED_INTERVAL || 0) * UPGRADE_TYPES.SPEED_INTERVAL.effect * 1000;
+            const speedInterval = baseInterval + upgradeEffect;
+            
+            const now = Date.now();
+            if (now - this.lastSpeedIncreaseTime >= speedInterval) {
+                // Increase speed by 5%
+                const speedMultiplier = 1.05;
+                
+                // Calculate current direction
+                const currentSpeed = Math.sqrt(this.ball.dx * this.ball.dx + this.ball.dy * this.ball.dy);
+                const directionX = this.ball.dx / currentSpeed;
+                const directionY = this.ball.dy / currentSpeed;
+                
+                // Apply new speed while maintaining direction
+                const newSpeed = currentSpeed * speedMultiplier;
+                this.ball.dx = directionX * newSpeed;
+                this.ball.dy = directionY * newSpeed;
+                
+                // Show notification
+                this.speedNotificationTimer = 1000; // Show for 2 seconds
+                this.lastSpeedIncreaseTime = now;
+            }
+        }
+
+        // Update speed notification timer
+        if (this.speedNotificationTimer > 0) {
+            this.speedNotificationTimer -= deltaTime * 1000;
+        }
 
         if (this.upgrades.AUTO_PADDLE > 0 && !this.ball.attached && !this.touchState.active && !this.keyState.left && !this.keyState.right) {
             const autoSpeed = this.upgrades.AUTO_PADDLE * UPGRADE_TYPES.AUTO_PADDLE.effect;
@@ -901,7 +971,38 @@ class Game {
         // Clear canvas
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        // Draw clowns if active
+        // Draw UI elements in the top margin area
+        if (this.gameState === 'playing') {
+            this.ctx.save();
+            
+            // Draw money counter on the left
+            this.ctx.fillStyle = '#FFFFFF';
+            this.ctx.font = 'bold 24px Arial';
+            this.ctx.textAlign = 'left';
+            this.ctx.fillText(`💰 ${this.money}`, 20, this.topMargin / 2);
+
+            // Draw speed counter and notification on the right
+            if (!this.ball.attached) {
+                const currentSpeed = Math.sqrt(this.ball.dx * this.ball.dx + this.ball.dy * this.ball.dy);
+                const speedDisplay = Math.round(currentSpeed * 10) / 10;
+                
+                // Draw speed counter higher up
+                this.ctx.textAlign = 'right';
+                this.ctx.fillText(`Speed: ${speedDisplay}x`, this.canvas.width - 20, this.topMargin / 3);
+
+                // Draw speed-up notification below the speed counter
+                if (this.speedNotificationTimer > 0) {
+                    const alpha = Math.min(1, this.speedNotificationTimer / 1000);
+                    this.ctx.globalAlpha = alpha;
+                    this.ctx.fillStyle = '#FF5555';
+                    this.ctx.fillText('Speed Up!', this.canvas.width - 20, this.topMargin * 2/3);
+                }
+            }
+            
+            this.ctx.restore();
+        }
+
+        // Draw game elements
         if (this.showClowns) {
             this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -910,9 +1011,26 @@ class Game {
             this.ctx.textAlign = 'center';
             const clowns = '🤡🤡🤡';
             this.ctx.fillText(clowns, this.canvas.width/2, this.canvas.height/2);
-            return;
+        } else {
+            // Draw particles
+            this.particles.forEach(particle => particle.draw(this.ctx));
+
+            // Draw blocks
+            this.blocks.forEach(block => block.draw(this.ctx));
+
+            // Draw paddle
+            this.ctx.fillStyle = '#FFF';
+            this.ctx.fillRect(this.paddle.x, this.paddle.y, this.paddle.width, this.paddle.height);
+
+            // Draw ball
+            this.ctx.beginPath();
+            this.ctx.arc(this.ball.x, this.ball.y, this.ball.radius, 0, Math.PI * 2);
+            this.ctx.fillStyle = '#FFF';
+            this.ctx.fill();
+            this.ctx.closePath();
         }
 
+        // Draw game over screen if needed
         if (this.isGameOver) {
             // Draw game over screen
             this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
@@ -932,25 +1050,7 @@ class Game {
             this.ctx.fillStyle = '#fff';
             this.ctx.font = '24px Arial';
             this.ctx.fillText('Shop', this.canvas.width/2, this.canvas.height/2 + 95);
-            return;
         }
-        
-        // Draw particles
-        this.particles.forEach(particle => particle.draw(this.ctx));
-
-        // Draw blocks
-        this.blocks.forEach(block => block.draw(this.ctx));
-
-        // Draw paddle
-        this.ctx.fillStyle = '#FFF';
-        this.ctx.fillRect(this.paddle.x, this.paddle.y, this.paddle.width, this.paddle.height);
-
-        // Draw ball
-        this.ctx.beginPath();
-        this.ctx.arc(this.ball.x, this.ball.y, this.ball.radius, 0, Math.PI * 2);
-        this.ctx.fillStyle = '#FFF';
-        this.ctx.fill();
-        this.ctx.closePath();
     }
 
     gameLoop(timestamp) {
