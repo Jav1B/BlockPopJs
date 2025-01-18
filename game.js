@@ -584,16 +584,10 @@ class Game {
                         localStorage.removeItem(`upgrade_${type}`);
                     });
                     console.log('Cheat activated: Reset all upgrades and money!');
+                    this.updateShopDisplay();
                     this.resetGame(); // Reset the game after clearing upgrades and money
                     tapCount = 0; // Reset tap count only after the upgrade reset
                 }
-
-                // Reset the tap count after a short delay
-                setTimeout(() => {
-                    if (tapCount !== 0) {
-                        tapCount = 0;
-                    }
-                }, 2000);
             });
         } else {
             console.warn('Shop title not found!');
