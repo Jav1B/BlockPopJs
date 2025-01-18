@@ -584,7 +584,6 @@ class Game {
                         localStorage.removeItem(`upgrade_${type}`);
                     });
                     console.log('Cheat activated: Reset all upgrades and money!');
-                    this.updateShopDisplay();
                     this.resetGame(); // Reset the game after clearing upgrades and money
                     tapCount = 0; // Reset tap count only after the upgrade reset
                 }
@@ -626,7 +625,7 @@ class Game {
         if (this.blocks.length === 0) {
             this.createBlocks();
         }
-    }
+    }    
 
     spawnDecorativeBlock() {
         const blockTypes = Object.keys(BLOCK_TYPES);
@@ -696,13 +695,20 @@ class Game {
             this.paddle.x = Math.max(0, Math.min(this.canvas.width - this.paddle.width, this.paddle.x)); // Ensure paddle stays within bounds
         }
 
-        // Update paddle position based on keyboard input
+        // Handle keyboard movement
+        const moveSpeed = this.touchState.speed * 10; // Increase movement speed for arrow keys
         if (this.keyState.left) {
-            this.paddle.x = Math.max(0, this.paddle.x - 7 * deltaTime);
+            this.paddle.x -= moveSpeed * deltaTime;
         }
         if (this.keyState.right) {
-            this.paddle.x = Math.min(this.canvas.width - this.paddle.width, this.paddle.x + 7 * deltaTime);
+            this.paddle.x += moveSpeed * deltaTime;
         }
+
+        // Ensure paddle stays within bounds
+        this.paddle.x = Math.max(0, Math.min(this.canvas.width - this.paddle.width, this.paddle.x));
+
+        // Ensure paddle stays within bounds
+        this.paddle.x = Math.max(0, Math.min(this.canvas.width - this.paddle.width, this.paddle.x));
 
         // Update ball position if not attached to paddle
         if (!this.ball.attached) {
