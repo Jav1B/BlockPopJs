@@ -74,14 +74,26 @@ class Game {
             this.startGame();
         };
         
-        shopButton.addEventListener('click', handleShopClick);
-        shopButton.addEventListener('touchstart', handleShopClick);
+        if (shopButton) {
+            shopButton.addEventListener('click', handleShopClick);
+            shopButton.addEventListener('touchstart', handleShopClick);
+        } else {
+            console.warn('Shop button not found!');
+        }
         
-        shopBackButton.addEventListener('click', handleShopBackClick);
-        shopBackButton.addEventListener('touchstart', handleShopBackClick);
+        if (shopBackButton) {
+            shopBackButton.addEventListener('click', handleShopBackClick);
+            shopBackButton.addEventListener('touchstart', handleShopBackClick);
+        } else {
+            console.warn('Shop back button not found!');
+        }
         
-        shopPlayButton.addEventListener('click', handleShopPlayClick);
-        shopPlayButton.addEventListener('touchstart', handleShopPlayClick);
+        if (shopPlayButton) {
+            shopPlayButton.addEventListener('click', handleShopPlayClick);
+            shopPlayButton.addEventListener('touchstart', handleShopPlayClick);
+        } else {
+            console.warn('Shop play button not found!');
+        }
         
         // Initial shop setup
         this.setupShop();
@@ -462,10 +474,19 @@ class Game {
             this.handleGameAction();
         };
 
-        startScreen.addEventListener('click', handleScreenClick);
-        startScreen.addEventListener('touchstart', handleScreenClick);
-        gameOverScreen.addEventListener('click', handleScreenClick);
-        gameOverScreen.addEventListener('touchstart', handleScreenClick);
+        if (startScreen) {
+            startScreen.addEventListener('click', handleScreenClick);
+            startScreen.addEventListener('touchstart', handleScreenClick);
+        } else {
+            console.warn('Start screen not found!');
+        }
+        
+        if (gameOverScreen) {
+            gameOverScreen.addEventListener('click', handleScreenClick);
+            gameOverScreen.addEventListener('touchstart', handleScreenClick);
+        } else {
+            console.warn('Game over screen not found!');
+        }
 
         // Handle pointer events for ball launch and gameplay
         const handlePointerEvent = (e) => {
@@ -483,8 +504,13 @@ class Game {
             }
         };
         
-        this.canvas.addEventListener('click', handlePointerEvent);
-        this.canvas.addEventListener('touchstart', handlePointerEvent);
+        if (this.canvas) {
+            this.canvas.addEventListener('click', handlePointerEvent);
+            this.canvas.addEventListener('touchstart', handlePointerEvent);
+        } else {
+            console.warn('Canvas not found!');
+        }
+        
         // Mouse and touch movement
         /*const handlePointerMove = (e) => {
             if (!e.type.includes('touch')) {
@@ -527,37 +553,44 @@ class Game {
             this.touchState.active = false;
         };
 
-        /*this.canvas.addEventListener('mousemove', handlePointerMove);*/
-        this.canvas.addEventListener('touchmove', handleTouchMove);
-        this.canvas.addEventListener('touchstart', handleTouchStart);
-        this.canvas.addEventListener('touchend', handleTouchEnd);
-        this.canvas.addEventListener('touchcancel', handleTouchEnd);
+        if (this.canvas) {
+            this.canvas.addEventListener('touchmove', handleTouchMove);
+            this.canvas.addEventListener('touchstart', handleTouchStart);
+            this.canvas.addEventListener('touchend', handleTouchEnd);
+            this.canvas.addEventListener('touchcancel', handleTouchEnd);
+        } else {
+            console.warn('Canvas not found!');
+        }
 
         let tapCount = 0;
-        const shopTitle = document.getElementById('shop-title');
+        const shopTitle = document.querySelector('.shop-title'); // Change this line
 
-        shopTitle.addEventListener('click', () => {
-            tapCount++;
-            if (tapCount === 5) {
-                this.money += 100000;
-                localStorage.setItem('money', this.money);
-                console.log('Cheat activated: Awarded 100,000 money!');
-            } else if (tapCount === 10) {
-                this.money = 0;
-                this.upgrades = {};
-                localStorage.setItem('money', this.money);
-                Object.keys(UPGRADE_TYPES).forEach(type => {
-                    localStorage.removeItem(`upgrade_${type}`);
-                });
-                console.log('Cheat activated: Reset all upgrades and money!');
-                this.resetGame();
-            }
+        if (shopTitle) {
+            shopTitle.addEventListener('click', () => {
+                tapCount++;
+                if (tapCount === 5) {
+                    this.money += 100000;
+                    localStorage.setItem('money', this.money);
+                    console.log('Cheat activated: Awarded 100,000 money!');
+                } else if (tapCount === 10) {
+                    this.money = 0;
+                    this.upgrades = {};
+                    localStorage.setItem('money', this.money);
+                    Object.keys(UPGRADE_TYPES).forEach(type => {
+                        localStorage.removeItem(`upgrade_${type}`);
+                    });
+                    console.log('Cheat activated: Reset all upgrades and money!');
+                    this.resetGame();
+                }
 
-            // Reset the tap count after a short delay
-            setTimeout(() => {
-                tapCount = 0;
-            }, 2000);
-        });
+                // Reset the tap count after a short delay
+                setTimeout(() => {
+                    tapCount = 0;
+                }, 2000);
+            });
+        } else {
+            console.warn('Shop title not found!');
+        }
     }
 
     updateMoney(amount) {
