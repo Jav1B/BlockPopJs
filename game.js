@@ -759,14 +759,7 @@ class Game {
                 const currentSpeed = Math.sqrt(this.ball.dx * this.ball.dx + this.ball.dy * this.ball.dy);
                 const directionX = this.ball.dx / currentSpeed;
                 const directionY = this.ball.dy / currentSpeed;
-                
-                // Increase target speed
-                this.currentSpeed += this.speedIncrease;
-                
-                // Apply new speed while maintaining direction
-                this.ball.dx = directionX * this.currentSpeed;
-                this.ball.dy = directionY * this.currentSpeed;
-                
+
                 // Get current block's tier
                 const currentTier = BLOCK_TYPES[blockType].tier;
                 
