@@ -406,6 +406,14 @@ class Game {
         this.gameState = 'playing';
         document.getElementById('start-screen').classList.remove('active');
         this.resetGame();
+
+        // Generate a random angle for the ball launch
+        const angle = Math.random() * (75 - 30) + 30; // Random angle between 30 and 75 degrees
+        const radians = angle * (Math.PI / 180); // Convert to radians
+
+        // Set the ball's velocity based on the angle
+        this.ball.dx = Math.cos(radians) * this.ball.damage; // Adjust speed as needed
+        this.ball.dy = -Math.sin(radians) * this.ball.damage; // Negative for upward direction
     }
     
     resetGame() {
