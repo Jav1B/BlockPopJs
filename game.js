@@ -575,7 +575,6 @@ class Game {
                     this.money += 100000;
                     localStorage.setItem('money', this.money);
                     this.updateShopDisplay(); // Update the UI to reflect the new money amount
-                    this.updateMoney(0); // Update the UI to reflect the new money amount
                     console.log('Cheat activated: Awarded 100,000 money!');
                 } else if (tapCount === 10) {
                     this.money = 0;
@@ -586,11 +585,14 @@ class Game {
                     });
                     console.log('Cheat activated: Reset all upgrades and money!');
                     this.resetGame(); // Reset the game after clearing upgrades and money
+                    tapCount = 0; // Reset tap count only after the upgrade reset
                 }
 
                 // Reset the tap count after a short delay
                 setTimeout(() => {
-                    tapCount = 0;
+                    if (tapCount !== 0) {
+                        tapCount = 0;
+                    }
                 }, 2000);
             });
         } else {
