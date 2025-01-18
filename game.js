@@ -684,6 +684,21 @@ class Game {
                 this.updateDecorativeBlocks();
             }
             return;
+        }        
+
+        if (this.upgrades.AUTO_PADDLE > 0 && !this.ball.attached && !this.touchState.active && !this.keyState.left && !this.keyState.right) {
+            const autoSpeed = this.upgrades.AUTO_PADDLE * UPGRADE_TYPES.AUTO_PADDLE.effect;
+            const paddleCenter = this.paddle.x + this.paddle.width / 2;
+            const moveAmount = this.touchState.speed * deltaTime * 10; // Use same base speed as touch controls
+            
+            // Only move if ball is above paddle
+            if (this.ball.y < this.paddle.y) {
+                const targetX = this.ball.x - this.paddle.width / 2; // Calculate target position
+                const dx = targetX - this.paddle.x; // Difference from current position
+                const moveSpeed = Math.sign(dx) * Math.min(Math.abs(dx), moveAmount * autoSpeed); // Scale movement by upgrade level
+                this.paddle.x += moveSpeed; // Move paddle towards target position
+                this.paddle.x = Math.max(0, Math.min(this.canvas.width - this.paddle.width, this.paddle.x)); // Ensure paddle stays within bounds
+            }
         }
         
         // Handle touch movement

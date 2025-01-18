@@ -34,7 +34,15 @@ const UPGRADE_TYPES = window.UPGRADE_TYPES = {
         priceIncrease: 60,
         effect: 0.3, // Percentage of block's max HP
         maxLevel: 99
-    }
+    },
+    AUTO_PADDLE: {
+        name: 'Auto Paddle',
+        basePrice: 1000,
+        priceIncrease: 750,
+        effect: 2, // Speed increase per level
+        maxLevel: 99,
+        description: 'Automatically moves paddle towards ball'
+    },
 };
 
 const BLOCK_TYPES = window.BLOCK_TYPES = {
