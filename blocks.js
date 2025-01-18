@@ -1,39 +1,39 @@
 const UPGRADE_TYPES = window.UPGRADE_TYPES = {
     PADDLE_WIDTH: {
         name: 'Wider Paddle',
-        basePrice: 1000,
+        basePrice: 500,
         priceIncrease: 500,
         effect: 10, // Width increase per level
-        maxLevel: 5
+        maxLevel: 99
     },
     BALL_DAMAGE: {
         name: 'Ball Damage',
-        basePrice: 800,
-        priceIncrease: 400,
+        basePrice: 100,
+        priceIncrease: 40,
         effect: 2, // Damage increase per level
-        maxLevel: 5
+        maxLevel: 99
     },
     EXPLOSION_CHANCE: {
         name: 'Explosion Chance',
-        basePrice: 1000,
-        priceIncrease: 500,
+        basePrice: 100,
+        priceIncrease: 50,
         effect: 10, // +10% chance per level
-        maxLevel: 5,
+        maxLevel: 99,
         description: 'Increases chance of explosions'
     },
     EXPLOSION_RADIUS: {
         name: 'Explosion Radius',
-        basePrice: 1500,
-        priceIncrease: 750,
+        basePrice: 100,
+        priceIncrease: 75,
         effect: 30, // Explosion radius in pixels
-        maxLevel: 3
+        maxLevel: 99
     },
     EXPLOSION_DAMAGE: {
         name: 'Explosion Damage',
-        basePrice: 1200,
-        priceIncrease: 600,
+        basePrice: 100,
+        priceIncrease: 60,
         effect: 0.3, // Percentage of block's max HP
-        maxLevel: 3
+        maxLevel: 99
     }
 };
 

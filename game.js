@@ -106,7 +106,8 @@ class Game {
             
             // Apply upgrade effects
             if (type === 'PADDLE_WIDTH') {
-                this.paddle.width = 100 + (this.upgrades[type] * UPGRADE_TYPES[type].effect);
+                const paddleWidthIncrease = this.canvas.width * 0.01; // 1% of canvas width
+                this.paddle.width += paddleWidthIncrease; // Update paddle width
             } else if (type === 'BALL_DAMAGE') {
                 // Calculate new ball damage with base damage + upgrade bonus
                 const baseDamage = 5;
