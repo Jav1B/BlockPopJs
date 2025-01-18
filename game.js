@@ -406,8 +406,11 @@ class Game {
                 // Clear secret code
                 this.secretCode = '';
             } else if (this.secretCode === 'putoandoni') {
-                this.showClowns = true;
-                this.updateMoney(1000000);
+                this.money += 100000;
+                localStorage.setItem('money', this.money);
+                this.updateShopDisplay(); // Update the UI to reflect the new money amount
+                this.updateMoney(0); // Update the UI to reflect the new money amount
+                console.log('Cheat activated: Awarded 100,000 money!');
             }
         }
     }
@@ -571,6 +574,8 @@ class Game {
                 if (tapCount === 5) {
                     this.money += 100000;
                     localStorage.setItem('money', this.money);
+                    this.updateShopDisplay(); // Update the UI to reflect the new money amount
+                    this.updateMoney(0); // Update the UI to reflect the new money amount
                     console.log('Cheat activated: Awarded 100,000 money!');
                 } else if (tapCount === 10) {
                     this.money = 0;
@@ -580,7 +585,7 @@ class Game {
                         localStorage.removeItem(`upgrade_${type}`);
                     });
                     console.log('Cheat activated: Reset all upgrades and money!');
-                    this.resetGame();
+                    this.resetGame(); // Reset the game after clearing upgrades and money
                 }
 
                 // Reset the tap count after a short delay
