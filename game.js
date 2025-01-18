@@ -532,6 +532,32 @@ class Game {
         this.canvas.addEventListener('touchstart', handleTouchStart);
         this.canvas.addEventListener('touchend', handleTouchEnd);
         this.canvas.addEventListener('touchcancel', handleTouchEnd);
+
+        let tapCount = 0;
+        const shopTitle = document.getElementById('shop-title');
+
+        shopTitle.addEventListener('click', () => {
+            tapCount++;
+            if (tapCount === 5) {
+                this.money += 100000;
+                localStorage.setItem('money', this.money);
+                console.log('Cheat activated: Awarded 100,000 money!');
+            } else if (tapCount === 10) {
+                this.money = 0;
+                this.upgrades = {};
+                localStorage.setItem('money', this.money);
+                Object.keys(UPGRADE_TYPES).forEach(type => {
+                    localStorage.removeItem(`upgrade_${type}`);
+                });
+                console.log('Cheat activated: Reset all upgrades and money!');
+                this.resetGame();
+            }
+
+            // Reset the tap count after a short delay
+            setTimeout(() => {
+                tapCount = 0;
+            }, 2000);
+        });
     }
 
     updateMoney(amount) {
