@@ -477,7 +477,7 @@ class Game {
         this.canvas.addEventListener('click', handlePointerEvent);
         this.canvas.addEventListener('touchstart', handlePointerEvent);
         // Mouse and touch movement
-        const handlePointerMove = (e) => {
+        /*const handlePointerMove = (e) => {
             if (!e.type.includes('touch')) {
                 // Handle mouse movement directly
                 const rect = this.canvas.getBoundingClientRect();
@@ -485,7 +485,7 @@ class Game {
                 this.paddle.x = Math.max(0, Math.min(this.canvas.width - this.paddle.width,
                     x - this.paddle.width / 2));
             }
-        };
+        };*/
 
         // Separate touch handler for smooth movement
         const handleTouchMove = (e) => {
@@ -620,11 +620,11 @@ class Game {
         
         // Handle touch movement
         if (this.touchState.active) {
-            const targetX = this.touchState.targetX - this.paddle.width / 2;
-            const dx = targetX - this.paddle.x;
-            const moveAmount = Math.sign(dx) * Math.min(Math.abs(dx), this.touchState.speed * deltaTime * 50); // Adjust movement incrementally
-            this.paddle.x = Math.max(0, Math.min(this.canvas.width - this.paddle.width,
-                this.paddle.x + moveAmount));
+            const targetX = this.touchState.targetX - this.paddle.width / 2; // Calculate target position
+            const dx = targetX - this.paddle.x; // Difference from current position
+            const moveAmount = Math.sign(dx) * Math.min(Math.abs(dx), this.touchState.speed * deltaTime * 10); // Adjust movement incrementally
+            this.paddle.x += moveAmount; // Move paddle towards target position
+            this.paddle.x = Math.max(0, Math.min(this.canvas.width - this.paddle.width, this.paddle.x)); // Ensure paddle stays within bounds
         }
 
         // Update paddle position based on keyboard input
