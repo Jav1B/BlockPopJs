@@ -135,19 +135,20 @@ class Particle {
         this.life = 40 + Math.random() * 20;
     }
     
-    update() {
+    update(deltaTime = 1/60) {  // Default to 60 FPS if no deltaTime provided
         // Age-based removal
         if (Date.now() - this.creationTime >= 3000) return false;
         
-        this.x += this.dx;
-        this.y += this.dy;
+        // Update position using deltaTime
+        this.x += this.dx * deltaTime * 60;  // Scale by 60 to maintain original speed at 60 FPS
+        this.y += this.dy * deltaTime * 60;
         
-        // Simplified physics
+        // Simplified physics with deltaTime
         if (this.type !== 'upward') {
-            this.dy += 0.1;
+            this.dy += 0.1 * deltaTime * 60;
         }
         
-        this.life--;
+        this.life -= deltaTime * 60;  // Scale life reduction by deltaTime
         return this.life > 0;
     }
     

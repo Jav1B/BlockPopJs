@@ -714,7 +714,7 @@ class Game {
                 this.particles = this.particles.filter(particle => {
                     // Remove particles older than 3 seconds
                     if (now - particle.creationTime >= 3000) return false;
-                    return particle.update();
+                    return particle.update(deltaTime);
                 });
             }
             
@@ -962,7 +962,7 @@ class Game {
             const now = Date.now();
             this.particles = this.particles.filter(particle => {
                 if (now - particle.creationTime >= 3000) return false;
-                return particle.update();
+                return particle.update(deltaTime);
             });
         }
     }
@@ -1054,18 +1054,28 @@ class Game {
     }
 
     gameLoop(timestamp) {
-        if (this.lastFrameTime === 0) this.lastFrameTime = timestamp;
+        // Limit to ~60 FPS to ensure consistent game speed
+        if (this.lastFrameTime === 0) {
+            this.lastFrameTime = timestamp;
+            requestAnimationFrame(this.gameLoop.bind(this));
+            return;
+        }
+
         const elapsed = timestamp - this.lastFrameTime;
+        // Skip frame if less than ~16.6ms (60 FPS) has passed
+        if (elapsed < 16.6) {
+            requestAnimationFrame(this.gameLoop.bind(this));
+            return;
+        }
 
-        // Calculate delta time in seconds
-        const deltaTime = elapsed / 1000; // Convert milliseconds to seconds
+        // Limit maximum delta time to prevent huge jumps
+        const deltaTime = Math.min(elapsed, 32) / 1000; // Cap at ~30 FPS minimum, convert to seconds
 
-        // Update game logic using delta time
         this.update(deltaTime);
-        this.draw(); // Call the draw method to render the game
+        this.draw();
 
         this.lastFrameTime = timestamp;
-        requestAnimationFrame(this.gameLoop.bind(this)); // Continue the game loop
+        requestAnimationFrame(this.gameLoop.bind(this));
     }
 
     setupShop() {
